@@ -6,6 +6,7 @@ const express = require("express");
 var app = express();
 var bodyParser = require("body-parser");
 const cors = require('cors');
+const rateLimit = require("express-rate-limit");
 
 const APP_PORT = 3001;
 
@@ -44,6 +45,18 @@ function HighScore(name, score, date) {
   this.name = name;
   this.score = score;
   this.date = convertMilliSecondsToSeconds(parseInt(date, 10));;
+}
+
+HighScore.prototype.toString = function(){
+  return 'HighScore: ' + this.name + ' | ' + this.score + ' | ' + this.date;
+}
+
+HighScore.prototype.fromJson = function(jsonBody){
+  this.name = jsonBody.name;
+  this.score = jsonBody.score;
+  this.date = convertMilliSecondsToSeconds(parseInt(jsonBody.date, 10));
+
+  return this;
 }
 
 function dbRead(sql) {
@@ -107,6 +120,11 @@ function closeDatabase() {
 
 main();
 
+const limiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 8 * 10 // limit each IP to 40 requests per windowMs
+});
+app.use(limiter);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -177,6 +195,9 @@ app.post("/highscore", async (req, res, next) => {
   }
 
   dbInsertHighScore(reqBody).then(() => {
+    let hs = new HighScore().fromJson(reqBody);
+    console.log('Inserted new high score: ' + hs.toString());
+
     res.sendStatus(200);
     res.end();
   }, (err) => {
