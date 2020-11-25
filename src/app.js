@@ -65,7 +65,12 @@ function contentFilter(input){
     'sex': 'hex',
     'anal': 'lana',
     'tits': 'bits',
-    'titten': 'ratten'
+    'titten': 'ratten',
+    'schwul': 'konsul',
+    'schwuchtel': 'pelzmantel',
+    '<': '|',
+    '>': '|',
+    'http': 'link'
   }
 
   for (const [key, value] of Object.entries(offensiveContentMap)) {
