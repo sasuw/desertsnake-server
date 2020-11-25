@@ -41,8 +41,45 @@ function initDatabase() {
   db.run('CREATE TABLE IF NOT EXISTS highscores(name text, score integer, date integer)');
 }
 
+function contentFilter(input){
+  if(input == null || input === ''){
+    return input;
+  }
+  
+  let output = input;
+
+  let offensiveContentMap = {
+    'fick': 'chic',
+    'motherfuck': 'motherkiss',
+    'shit': 'mint',
+    'piss': 'miss',
+    'cock': 'duck',
+    'sucker': 'rocker',
+    'cunt': 'slot',
+    'fuck': 'duck',
+    'scheisse': 'narzisse',
+    'gay': 'joy',
+    'lesbian': 'martian',
+    'pornhub': 'cornrub',
+    'porn': 'corn',
+    'sex': 'hex',
+    'anal': 'lana',
+    'tits': 'bits',
+    'titten': 'ratten'
+  }
+
+  for (const [key, value] of Object.entries(offensiveContentMap)) {
+    if(output.toLocaleLowerCase().includes(key)){
+      let regExp = new RegExp(key, 'g');
+      output = output.replace(regExp, value);
+    }
+  }
+
+  return output;
+}
+
 function HighScore(name, score, date) {
-  this.name = name;
+  this.name = contentFilter(name);
   this.score = score;
   this.date = convertMilliSecondsToSeconds(parseInt(date, 10));;
 }
@@ -195,6 +232,12 @@ app.post("/highscore", async (req, res, next) => {
   }
 
   dbInsertHighScore(reqBody).then(() => {
+    let newHighScore = reqBody;
+    if(reqBody.length > 10){
+      console.warn('Highscore was too long: ' + newHighScore.length + ', shortening to 10 characters.');
+      newHighScore = newHighScore.substr(0, 10); 
+      console.warn('Highscore after shortening: ' + newHighScore);
+    }
     let hs = new HighScore().fromJson(reqBody);
     console.log('Inserted new high score: ' + hs.toString());
 
