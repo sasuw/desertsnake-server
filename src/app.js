@@ -167,7 +167,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 var corsOptions = {
-  origin: 'http://localhost:8000',
+  //origin: 'http://localhost:8000',
+  origin: 'https://snake.sasu.net',
   optionsSuccessStatus: 200 // For legacy browser support
 }
 
