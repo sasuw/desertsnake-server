@@ -7,10 +7,11 @@ var app = express();
 var bodyParser = require("body-parser");
 const cors = require('cors');
 const rateLimit = require("express-rate-limit");
+const requestIp = require('request-ip');
 
 const APP_PORT = 3001;
 
-var db;
+var db; 
 
 function main() {
   prepareDatabase();
@@ -38,7 +39,7 @@ function prepareDatabase() {
 }
 
 function initDatabase() {
-  db.run('CREATE TABLE IF NOT EXISTS highscores(name text, score integer, date integer)');
+  db.run('CREATE TABLE IF NOT EXISTS highscores(name text, score integer, date integer, ipSource text)');
 }
 
 function contentFilter(input){
@@ -70,7 +71,12 @@ function contentFilter(input){
     'schwuchtel': 'pelzmantel',
     '<': '|',
     '>': '|',
-    'http': 'link'
+    'http': 'link',
+    'fotze': 'katze',
+    'neger': 'gerne',
+    'nigger': 'ginger',
+    'hitler': 'merkel',
+    'pussy': 'kittn'
   }
 
   for (const [key, value] of Object.entries(offensiveContentMap)) {
@@ -84,6 +90,7 @@ function contentFilter(input){
 }
 
 function HighScore(name, score, date) {
+  this.originalName = name;
   this.name = contentFilter(name);
   this.score = score;
   this.date = convertMilliSecondsToSeconds(parseInt(date, 10));;
@@ -127,7 +134,7 @@ function dbInsert(sql, params) {
         reject(err);
       }
 
-      console.log('A row has been inserted with rowid ${this.lastID}');
+      console.log('A row has been inserted with rowid ' + this.lastID);
 
       resolve(this.lastID);
     });
@@ -144,13 +151,13 @@ function dbReadHighScoresTop10() {
   return dbRead(sql);
 }
 
-function dbInsertHighScore(highScore) {
-  let sql = 'INSERT INTO highscores (name, score, date) VALUES (?, ?, ?)';
-  let params = [highScore.name, highScore.score, highScore.date];
+function dbInsertHighScore(highScore, ipSource) {
+  let sql = 'INSERT INTO highscores (name, score, date, ipSource) VALUES (?, ?, ?, ?)';
+  let params = [highScore.name, highScore.score, highScore.date, ipSource];
   return dbInsert(sql, params);
 }
 
-function closeDatabase() {
+function closeDatabase() {mar
   // close the database connection
   db.close((err) => {
     if (err) {
@@ -168,16 +175,29 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+app.use(requestIp.mw())
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-var corsOptions = {
-  //origin: 'http://localhost:8000',
+var corsOptionsProd = {
   origin: 'https://snake.sasu.net',
   optionsSuccessStatus: 200 // For legacy browser support
 }
 
-app.use(cors(corsOptions));
+var corsOptionsDev = {
+  origin: 'http://localhost:8000',
+  optionsSuccessStatus: 200 // For legacy browser support
+}
+
+if(process.env.NODE_ENV.startsWith('dev')){
+  console.log('Starting in DEV');
+  app.use(cors(corsOptionsDev));
+}else{
+  console.log('Starting in PROD');
+  app.use(cors(corsOptionsProd));
+}
+
 
 app.listen(APP_PORT, () => {
   console.log("Highscore server running on port " + APP_PORT);
@@ -206,6 +226,8 @@ app.get("/highscore/top10", async (req, res, next) => {
 });
 
 app.post("/highscore", async (req, res, next) => {
+  console.log('ip: ' + req.clientIp);
+
   let reqBody = req.body;
 
   if(reqBody.name == null || reqBody.score == null || reqBody.date == null){
@@ -237,7 +259,7 @@ app.post("/highscore", async (req, res, next) => {
     return;
   }
 
-  dbInsertHighScore(reqBody).then(() => {
+  dbInsertHighScore(reqBody, req.clientIp).then(() => {
     let newHighScore = reqBody;
     if(reqBody.length > 10){
       console.warn('Highscore was too long: ' + newHighScore.length + ', shortening to 10 characters.');

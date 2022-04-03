@@ -12,6 +12,9 @@
                 "<node_internals>/**"
             ],
             "program": "${workspaceFolder}/src/app.js",
+            "env": {
+                "NODE_ENV": "development"
+            },
             "runtimeExecutable": "/home/sasu/.nvm/versions/node/v14.6.0/bin/node"
         }
     ]
