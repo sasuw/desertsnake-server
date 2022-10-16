@@ -49,37 +49,13 @@ function contentFilter(input){
   
   let output = input;
 
-  let offensiveContentMap = {
-    'fick': 'chic',
-    'motherfuck': 'motherkiss',
-    'shit': 'mint',
-    'piss': 'miss',
-    'cock': 'duck',
-    'sucker': 'rocker',
-    'cunt': 'slot',
-    'fuck': 'duck',
-    'scheisse': 'narzisse',
-    'gay': 'joy',
-    'lesbian': 'martian',
-    'pornhub': 'cornrub',
-    'porn': 'corn',
-    'sex': 'hex',
-    'anal': 'lana',
-    'tits': 'bits',
-    'titten': 'ratten',
-    'schwul': 'konsul',
-    'schwuchtel': 'pelzmantel',
+  let sanitizationMap = {
     '<': '|',
     '>': '|',
-    'http': 'link',
-    'fotze': 'katze',
-    'neger': 'gerne',
-    'nigger': 'ginger',
-    'hitler': 'merkel',
-    'pussy': 'kittn'
+    'http': 'link'
   }
 
-  for (const [key, value] of Object.entries(offensiveContentMap)) {
+  for (const [key, value] of Object.entries(sanitizationMap)) {
     if(output.toLocaleLowerCase().includes(key)){
       let regExp = new RegExp(key, 'g');
       output = output.replace(regExp, value);
