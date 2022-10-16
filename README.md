@@ -1,6 +1,6 @@
 Highscore server for https://github.com/sasuw/desertsnake
 
-Uses Node 12
+Uses Node 14
 
 To start, run
 
